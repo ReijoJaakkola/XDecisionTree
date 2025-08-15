@@ -2,11 +2,6 @@
 
 `XDecisionTreeClassifier` is an extension of scikit-learn's `DecisionTreeClassifier` that extracts human-readable decision rules from trained trees. It allows you to see the model logic in a very compact **IF–ELSE** format.
 
-## Features
-- Extract rules from decision trees with readable feature names.
-- Generalizes rules to remove redundant constraints.
-- Prints rules in intuitive `IF ... THEN ... ELSE ...` statements.
-
 ## Installation
 ```bash
 pip install .
@@ -23,8 +18,14 @@ feature_names = ['sepal length', 'sepal width', 'petal length', 'petal width']
 
 # Train model
 clf = XDecisionTreeClassifier(max_depth=3)
-clf.fit(X, y, feature_names=feature_names)
+clf.fit(X, y)
 
 # Print extracted rules
+clf.tree_to_rule_list(feature_names)
 print(clf)
+
+# Example output:
+# IF petal length <= 2.450 THEN 0
+# ELSE IF 2.450 < petal length <= 4.950 AND petal width <= 1.750 THEN 1
+# ELSE 2
 ```

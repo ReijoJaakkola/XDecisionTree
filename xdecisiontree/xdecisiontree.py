@@ -52,13 +52,6 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
         ----------
         feature_names : list of str, optional
             Names of features. If None, feature indices are used.
-
-        Returns
-        -------
-        rules : list of dict
-            List of extracted rules. Each rule has 'constraints' and 'prediction'.
-        majority_class : int
-            Most common class in the leaves, used as default.
         """
         tree = self.tree_
         n_features = self.n_features_in_
@@ -208,7 +201,6 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
 
         self.rules = rules
         self.majority_class = majority_class
-        return rules, majority_class
 
     def __str__(self):
         """
