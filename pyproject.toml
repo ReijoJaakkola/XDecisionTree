@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xdecisiontree"
+version = "1.0.0"
+description = "Decision tree classifier with human-readable rule extraction"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Reijo Jaakkola", email = "jaakkolareijo@hotmail.com"}
+]
+urls = { "Homepage" = "https://github.com/ReijoJaakkola/XDecisionTreeClassifier" }
+
+dependencies = [
+    "numpy",
+    "scikit-learn"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
