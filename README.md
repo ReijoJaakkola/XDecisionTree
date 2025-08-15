@@ -9,7 +9,7 @@
 
 ## Installation
 ```bash
-pip install git+https://github.com/yourusername/RuleDecisionTreeClassifier.git
+pip install .
 ```
 
 ## Example
