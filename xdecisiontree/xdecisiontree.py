@@ -204,7 +204,7 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
         self.rules = rules
         self.majority_class = majority_class
 
-    def __str__(self):
+    def _rules_to_str(self):
         """
         Returns a human-readable IF-ELSE rule representation of the tree.
         Uses the stored `rules` and `majority_class`.
@@ -231,3 +231,6 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
             lines.append(f"{prefix} {' AND '.join(conds)} THEN {rule['prediction']}")
         lines.append(f"ELSE {self.majority_class}")
         return "\n".join(lines)
+
+    def __str__(self) -> str:
+        return self._rules_to_str()
