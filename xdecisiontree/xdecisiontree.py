@@ -46,22 +46,13 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
         self.rules = None
         self.majority_class = None
 
-    def _tree_to_rule_list(self, feature_names=None):
+    def _tree_to_rule_list(self):
         """
         Extracts generalized IF-ELSE rules from the trained decision tree.
-
-        Parameters
-        ----------
-        feature_names : list of str, optional
-            Names of features. If None, feature indices are used.
         """
         tree = self.tree_
         n_features = self.n_features_in_
-
-        if feature_names is not None:
-            name_map = {i: feature_names[i] for i in range(n_features)}
-        else:
-            name_map = {i: i for i in range(n_features)}
+        name_map = {i: self.feature_names_in_[i] for i in range(n_features)}
 
         def get_paths(node=0, path=None):
             if path is None:
@@ -178,15 +169,9 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
         rules = []
         existing_constraints = []
 
-        leaf_values = [tree.value[node][0] for node in range(tree.node_count)
-                       if tree.feature[node] == _tree.TREE_UNDEFINED]
-        majority_class = np.argmax(np.sum(leaf_values, axis=0))
-
         paths = get_paths()
+        prediction_counts = {}
         for path, prediction in paths:
-            if prediction == majority_class:
-                continue
-
             skip = False
             for rc in existing_constraints:
                 if path_satisfies(rc, path):
@@ -195,6 +180,10 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
             if skip:
                 continue
 
+            if prediction not in prediction_counts:
+                prediction_counts[prediction] = 0
+            prediction_counts[prediction] += 1
+
             constraints = generalize_path(path, prediction)
             named_constraints = {name_map[f]: tuple(bounds) for f, bounds in constraints.items()}
 
@@ -202,7 +191,12 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
             existing_constraints.append(constraints)
 
         self.rules = rules
-        self.majority_class = majority_class
+        self.majority_class = max(prediction_counts.items(), key=lambda x: x[1])[0]
+
+    def fit(self, X, y, sample_weight=None, check_input=True):
+        super().fit(X, y, sample_weight=sample_weight, check_input=check_input)
+        self._tree_to_rule_list()
+        return self
 
     def _rules_to_str(self):
         """
@@ -214,23 +208,22 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
         except NotFittedError:
             raise NotFittedError("This classifier is not fitted yet. Call 'fit' before using this method.")
 
-        if self.rules is None or self.majority_class is None:
-            self._tree_to_rule_list(self.feature_names_in_)
-
         lines = []
         for i, rule in enumerate(self.rules):
+            if rule['prediction'] == self.majority_class:
+                continue
             conds = []
             for f, (lb, ub) in rule['constraints'].items():
                 if lb != -np.inf and ub != np.inf:
-                    conds.append(f"{lb:.3f} < {f} <= {ub:.3f}")
+                    conds.append(f'{lb:.3f} < {f} <= {ub:.3f}')
                 elif lb != -np.inf:
-                    conds.append(f"{f} > {lb:.3f}")
+                    conds.append(f'{f} > {lb:.3f}')
                 elif ub != np.inf:
-                    conds.append(f"{f} <= {ub:.3f}")
-            prefix = "IF" if i == 0 else "ELSE IF"
+                    conds.append(f'{f} <= {ub:.3f}')
+            prefix = 'IF' if i == 0 else 'ELSE IF'
             lines.append(f"{prefix} {' AND '.join(conds)} THEN {rule['prediction']}")
-        lines.append(f"ELSE {self.majority_class}")
-        return "\n".join(lines)
+        lines.append(f'ELSE {self.majority_class}')
+        return '\n'.join(lines)
 
     def __str__(self) -> str:
         return self._rules_to_str()
