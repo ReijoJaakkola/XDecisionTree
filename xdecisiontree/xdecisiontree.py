@@ -1,5 +1,7 @@
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier, _tree
+from sklearn.utils.validation import check_is_fitted
+from sklearn.exceptions import NotFittedError
 
 class XDecisionTreeClassifier(DecisionTreeClassifier):
     """
@@ -44,7 +46,7 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
         self.rules = None
         self.majority_class = None
 
-    def tree_to_rule_list(self, feature_names=None):
+    def _tree_to_rule_list(self, feature_names=None):
         """
         Extracts generalized IF-ELSE rules from the trained decision tree.
 
@@ -207,8 +209,13 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
         Returns a human-readable IF-ELSE rule representation of the tree.
         Uses the stored `rules` and `majority_class`.
         """
+        try:
+            check_is_fitted(self)
+        except NotFittedError:
+            raise NotFittedError("This classifier is not fitted yet. Call 'fit' before using this method.")
+
         if self.rules is None or self.majority_class is None:
-            return "Rules have not been extracted yet. Call `tree_to_rule_list()` first."
+            self._tree_to_rule_list(self.feature_names_in_)
 
         lines = []
         for i, rule in enumerate(self.rules):
