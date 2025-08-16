@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.tree import DecisionTreeClassifier, _tree
 from sklearn.utils.validation import check_is_fitted
 from sklearn.exceptions import NotFittedError
+from operator import itemgetter
 
 class XDecisionTreeClassifier(DecisionTreeClassifier):
     """
@@ -227,3 +228,62 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
 
     def __str__(self) -> str:
         return self._rules_to_str()
+
+    def print_rules_with_scores(self, X, y):
+        """
+        Print all rules along with their support and accuracy, sorted by accuracy.
+
+        Parameters
+        ----------
+        X : pandas.DataFrame
+            Feature data.
+        y : array-like
+            True labels.
+        """
+        try:
+            check_is_fitted(self)
+        except NotFittedError:
+            raise NotFittedError("This classifier is not fitted yet. Call 'fit' before using this method.")
+
+        def apply_rule(rule, X):
+            """Check which rows of X satisfy a single rule (works with DataFrame)."""
+            mask = np.ones(len(X), dtype=bool)
+            for f, (lb, ub) in rule['constraints'].items():
+                mask &= (X[f] > lb) & (X[f] <= ub)
+            return mask
+
+        results = []
+
+        for i, rule in enumerate(self.rules):
+            mask = apply_rule(rule, X)
+            support = mask.sum()
+
+            if support == 0:
+                accuracy = 0.0
+            else:
+                accuracy = (y[mask] == rule['prediction']).mean()
+
+            results.append({
+                'index': i,
+                'rule': rule,
+                'support': support,
+                'accuracy': accuracy
+            })
+
+        # Sort by accuracy descending
+        results.sort(key=itemgetter('accuracy'), reverse=True)
+
+        for res in results:
+            i = res['index']
+            rule = res['rule']
+            conds = []
+            for f, (lb, ub) in rule['constraints'].items():
+                if lb != -np.inf and ub != np.inf:
+                    conds.append(f'{lb:.3f} < {f} <= {ub:.3f}')
+                elif lb != -np.inf:
+                    conds.append(f'{f} > {lb:.3f}')
+                elif ub != np.inf:
+                    conds.append(f'{f} <= {ub:.3f}')
+            condition_str = ' AND '.join(conds) if conds else 'TRUE'
+            print(f"IF {condition_str} THEN {rule['prediction']} "
+                f"(support={res['support']}, accuracy={res['accuracy']:.2%})")
