@@ -1,3 +1,4 @@
 /build
 /xdecisiontree.egg-info
 /xdecisiontree/__pycache__
+/tests/__pycache__

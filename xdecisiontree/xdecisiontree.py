@@ -44,8 +44,8 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
             min_impurity_decrease=min_impurity_decrease,
             ccp_alpha=ccp_alpha,
         )
-        self.rules = None
-        self.majority_class = None
+        self.rules_ = None
+        self.majority_class_ = None
 
     def _tree_to_rule_list(self):
         """
@@ -60,7 +60,7 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
                 path = []
             if tree.feature[node] == _tree.TREE_UNDEFINED:
                 value = tree.value[node][0]
-                prediction = np.argmax(value)
+                prediction = self.classes_[np.argmax(value)]
                 return [(path, prediction)]
             else:
                 feature = tree.feature[node]
@@ -191,8 +191,8 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
             rules.append({'constraints': named_constraints, 'prediction': prediction})
             existing_constraints.append(constraints)
 
-        self.rules = rules
-        self.majority_class = max(prediction_counts.items(), key=lambda x: x[1])[0]
+        self.rules_ = rules
+        self.majority_class_ = max(prediction_counts.items(), key=lambda x: x[1])[0]
 
     def fit(self, X, y, sample_weight=None, check_input=True):
         super().fit(X, y, sample_weight=sample_weight, check_input=check_input)
@@ -209,9 +209,10 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
         except NotFittedError:
             raise NotFittedError("This classifier is not fitted yet. Call 'fit' before using this method.")
 
+        first = True
         lines = []
-        for i, rule in enumerate(self.rules):
-            if rule['prediction'] == self.majority_class:
+        for _, rule in enumerate(self.rules_):
+            if rule['prediction'] == self.majority_class_:
                 continue
             conds = []
             for f, (lb, ub) in rule['constraints'].items():
@@ -221,9 +222,10 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
                     conds.append(f'{f} > {lb:.3f}')
                 elif ub != np.inf:
                     conds.append(f'{f} <= {ub:.3f}')
-            prefix = 'IF' if i == 0 else 'ELSE IF'
+            prefix = 'IF' if first else 'ELSE IF'
             lines.append(f"{prefix} {' AND '.join(conds)} THEN {rule['prediction']}")
-        lines.append(f'ELSE {self.majority_class}')
+            first = False
+        lines.append(f'ELSE {self.majority_class_}')
         return '\n'.join(lines)
 
     def __str__(self) -> str:
@@ -254,7 +256,7 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
 
         results = []
 
-        for i, rule in enumerate(self.rules):
+        for i, rule in enumerate(self.rules_):
             mask = apply_rule(rule, X)
             support = mask.sum()
 
