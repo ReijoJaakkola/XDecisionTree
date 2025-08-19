@@ -11,10 +11,10 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
     Attributes
     ----------
     rules : list of dict
-        Extracted generalized rules after calling `tree_to_rule_list`.
+        Extracted generalized rules after calling `fit`.
         Each rule is a dict with 'constraints' and 'prediction'.
     majority_class : int
-        Class predicted by default if no rule applies.
+        Class predicted by default if no rule applies. Also extracted after `fit`.
     """
 
     def __init__(
