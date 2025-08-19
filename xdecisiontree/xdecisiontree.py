@@ -217,11 +217,11 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
             conds = []
             for f, (lb, ub) in rule['constraints'].items():
                 if lb != -np.inf and ub != np.inf:
-                    conds.append(f'{lb:.3f} < {f} <= {ub:.3f}')
+                    conds.append(f'({lb:.3f} < {f} <= {ub:.3f})')
                 elif lb != -np.inf:
-                    conds.append(f'{f} > {lb:.3f}')
+                    conds.append(f'({f} > {lb:.3f})')
                 elif ub != np.inf:
-                    conds.append(f'{f} <= {ub:.3f}')
+                    conds.append(f'({f} <= {ub:.3f})')
             prefix = 'IF' if first else 'ELSE IF'
             lines.append(f"{prefix} {' AND '.join(conds)} THEN {rule['prediction']}")
             first = False
@@ -281,11 +281,11 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
             conds = []
             for f, (lb, ub) in rule['constraints'].items():
                 if lb != -np.inf and ub != np.inf:
-                    conds.append(f'{lb:.3f} < {f} <= {ub:.3f}')
+                    conds.append(f'({lb:.3f} < {f} <= {ub:.3f})')
                 elif lb != -np.inf:
-                    conds.append(f'{f} > {lb:.3f}')
+                    conds.append(f'({f} > {lb:.3f})')
                 elif ub != np.inf:
-                    conds.append(f'{f} <= {ub:.3f}')
+                    conds.append(f'({f} <= {ub:.3f})')
             condition_str = ' AND '.join(conds) if conds else 'TRUE'
             print(f"IF {condition_str} THEN {rule['prediction']} "
                 f"(support={res['support']}, accuracy={res['accuracy']:.2%})")
