@@ -231,7 +231,7 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
     def __str__(self) -> str:
         return self._rules_to_str()
 
-    def print_rules_with_scores(self, X, y):
+    def print_rules_with_scores(self, X, y, accuracy_threshold=0.0):
         """
         Print all rules along with their support and accuracy, sorted by accuracy.
 
@@ -241,6 +241,8 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
             Feature data.
         y : array-like
             True labels.
+        accuracy_threshold : float, optional
+            Minimum accuracy to display a rule. Default is 0.0 (show all rules).
         """
         try:
             check_is_fitted(self)
@@ -264,6 +266,9 @@ class XDecisionTreeClassifier(DecisionTreeClassifier):
                 accuracy = 0.0
             else:
                 accuracy = (y[mask] == rule['prediction']).mean()
+
+            if accuracy < accuracy_threshold:
+                continue
 
             results.append({
                 'index': i,
